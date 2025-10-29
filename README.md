@@ -23,7 +23,7 @@ Users can download the conversation from the session as a text file for document
 
 ## Tech Stack
 - **Python**: The primary programming language used for developing the system.
-- **Gemini**: An AI technology used for natural language processing and context-based search.
+- **HuggingFace**: An AI technology used for natural language processing and context-based search.
 - **Streamlit**: A Python framework used to build interactive web applications.
 
 ## Installation
@@ -48,13 +48,13 @@ Install the required dependencies using pip:
 pip install -r requirements.txt
 ```
 ### 4. **Add API Key**
-This project requires an API key for Gemini. You can add it by:
+This project requires an API key for HuggingFace. You can add it by:
 * Creating a `.env` file in the root directory of the project, refer to .env.example.
 * Adding the following variable to the `.env` file:
 ```bash
-GEMINI_API_KEY=your-api-key-here
+HF_API_KEY=your-api-key-here
 ```
-Make sure to replace `your-api-key-here` with a valid API key from Gemini.
+Make sure to replace `your-api-key-here` with a valid API key from HuggingFace.
 
 ### 5. **Run the Server with Streamlit**
 To run the web application with Streamlit, use the following command:
