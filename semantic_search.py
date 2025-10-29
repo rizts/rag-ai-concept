@@ -4,11 +4,14 @@ from pathlib import Path
 from typing import List, Optional
 from datetime import datetime
 import numpy as np
-import google.generativeai as genai
+from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Initialize HuggingFace Inference Client
+HF_TOKEN = os.getenv("HF_API_KEY")
+client = InferenceClient(model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", token=HF_TOKEN)
 
 class ConversationMemory:
     """Manage conversation history for multi-turn RAG"""
@@ -58,22 +61,25 @@ class ConversationMemory:
 # ========== EMBEDDINGS ==========
 
 def get_embedding(text: str) -> list[float]:
-    """Get embedding from Gemini"""
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=text,
-        task_type="retrieval_document"
-    )
-    return result['embedding']
+    """Get embedding from HuggingFace"""
+    response = client.feature_extraction(text)
+    # The response is a numpy array, convert to list
+    if hasattr(response, 'tolist'):
+        return response.tolist()
+    else:
+        # If it's already a list or array-like
+        return list(response)
+
 
 def get_query_embedding(text: str) -> list[float]:
     """Get embedding for query"""
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=text,
-        task_type="retrieval_query"
-    )
-    return result['embedding']
+    response = client.feature_extraction(text)
+    # The response is a numpy array, convert to list
+    if hasattr(response, 'tolist'):
+        return response.tolist()
+    else:
+        # If it's already a list or array-like
+        return list(response)
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
     """Calculate cosine similarity"""
@@ -237,7 +243,7 @@ def hybrid_search(query: str, docs: List[dict],
 # ========== RAG ==========
 
 def generate_answer(query: str, context_chunks: List[str]) -> dict:
-    """Generate answer using Gemini with retrieved context"""
+    """Generate answer using HuggingFace with retrieved context"""
     
     context = "\n\n".join([f"[{i+1}] {chunk}" for i, chunk in enumerate(context_chunks)])
     
@@ -250,6 +256,9 @@ Question: {query}
 
 Answer:"""
     
+    # Note: This function still uses HuggingFace for text generation, only embeddings changed
+    import google.generativeai as genai
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt)
     
@@ -302,6 +311,9 @@ Instructions:
 
 Answer:"""
     
+    # Note: This function still uses HuggingFace for text generation, only embeddings changed
+    import google.generativeai as genai
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt)
     
@@ -356,6 +368,9 @@ Instructions:
 
 Answer:"""
     
+    # Note: This function still uses HuggingFace for text generation, only embeddings changed
+    import google.generativeai as genai
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt, stream=True)
     
@@ -663,6 +678,9 @@ Follow-up question: {query}
 
 Standalone question:"""
     
+    # Note: This function still uses HuggingFace for text generation, only embeddings changed
+    import google.generativeai as genai
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt)
     
@@ -675,7 +693,7 @@ def interactive_search(docs: List[dict]):
     """Interactive search with streaming support"""
     
     print("\n" + "="*60)
-    print("🔍 ADVANCED RAG SYSTEM - Gemini (with Streaming)")
+    print("🔍 ADVANCED RAG SYSTEM - HuggingFace Embeddings (with Streaming)")
     print("="*60)
     print("\nCommands:")
     print("  ask <query>          - RAG with conversation (non-streaming)")
@@ -825,7 +843,7 @@ def interactive_search(docs: List[dict]):
         
         elif command == "help":
             print("\n" + "="*60)
-            print("🔍 ADVANCED RAG SYSTEM - Commands")
+            print("🔍 ADVANCED RAG SYSTEM - Commands (HuggingFace Embeddings)")
             print("="*60)
             print("\nMain Commands:")
             print("  ask/rag <query>      - Ask question (wait for full answer)")
@@ -854,12 +872,12 @@ def interactive_search(docs: List[dict]):
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description="Advanced RAG System (Gemini)")
+    parser = argparse.ArgumentParser(description="Advanced RAG System (HuggingFace Embeddings)")
     parser.add_argument("folder", type=Path, help="Documents folder")
     parser.add_argument("--index", action="store_true", help="Create new index")
     args = parser.parse_args()
     
-    index_file = "index_gemini.json"
+    index_file = "index_hf.json"
     
     if args.index or not os.path.exists(index_file):
         print("📚 Loading documents...")

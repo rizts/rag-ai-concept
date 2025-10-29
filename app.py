@@ -100,7 +100,7 @@ if 'messages' not in st.session_state:
 # Sidebar
 with st.sidebar:
     st.title("🤖 RAG Chat System")
-    st.markdown("Powered by Gemini")
+    st.markdown("Powered by HuggingFace Embeddings")
     st.markdown("---")
     
     # Document Management
@@ -117,14 +117,18 @@ with st.sidebar:
                     docs = load_documents(Path(docs_folder))
                     docs = create_index(docs)
                     st.session_state.docs = docs
-                    save_index(docs, "index_streamlit.json")
+                    save_index(docs, "index_hf.json")  # Changed to HF index
                 st.success(f"✅ {len(docs)} chunks")
             else:
                 st.error(f"❌ Not found")
     
     with col2:
         if st.button("📂 Load Index"):
-            if Path("index_streamlit.json").exists():
+            if Path("index_hf.json").exists():  # Prefer HF index
+                with st.spinner("Loading..."):
+                    st.session_state.docs = load_index("index_hf.json")
+                st.success(f"✅ {len(st.session_state.docs)} chunks")
+            elif Path("index_streamlit.json").exists():  # For backward compatibility
                 with st.spinner("Loading..."):
                     st.session_state.docs = load_index("index_streamlit.json")
                 st.success(f"✅ {len(st.session_state.docs)} chunks")
@@ -170,7 +174,7 @@ with st.sidebar:
                 st.success(f"✅ {len(docs)} chunks")
             
             if st.session_state.docs:
-                save_index(st.session_state.docs, "index_streamlit.json")
+                save_index(st.session_state.docs, "index_hf.json")  # Changed to HF index
     
     # Stats
     if st.session_state.docs:
@@ -232,7 +236,7 @@ with st.sidebar:
             st.warning("No history")
 
 # Main area
-st.title("💬 RAG Chat Interface")
+st.title("💬 RAG Chat Interface (HuggingFace Embeddings)")
 
 # Tabs
 tab1, tab2 = st.tabs(["💬 Chat", "📜 History"])
